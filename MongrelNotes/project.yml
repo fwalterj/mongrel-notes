@@ -1,0 +1,128 @@
+# MongrelNotes – XcodeGen project specification
+# Run `xcodegen generate` in this directory to produce MongrelNotes.xcodeproj
+# Install XcodeGen: brew install xcodegen
+
+name: MongrelNotes
+options:
+  bundleIdPrefix: com.mongrel
+  deploymentTarget:
+    macOS: "14.0"
+  xcodeVersion: "15.0"
+  generateEmptyDirectories: true
+  createIntermediateGroups: true
+
+# ── Packages ───────────────────────────────────────────────────────────────────
+
+packages:
+  SharedFoundation:
+    path: SharedFoundation
+  # Uncomment to add a proper Markdown parser:
+  # swift-markdown:
+  #   url: https://github.com/apple/swift-markdown.git
+  #   from: 0.3.0
+
+# ── Targets ────────────────────────────────────────────────────────────────────
+
+targets:
+  MongrelNotes:
+    type: application
+    platform: macOS
+    deploymentTarget: "14.0"
+
+    sources:
+      - path: App
+        excludes:
+          - "**/.DS_Store"
+
+    resources:
+      - path: App/Resources
+
+    dependencies:
+      - package: SharedFoundation
+      - sdk: CoreSpotlight.framework
+
+    # ── Pre-build smoke test ─────────────────────────────────────────────────
+    # Runs `swift test` on SharedFoundation before each build.
+    # Set MN_SKIP_PREBUILD=1 in your scheme environment to skip (e.g. on CI
+    # where tests run as a separate step).
+    preBuildScripts:
+      - name: "SharedFoundation unit tests"
+        script: |
+          #!/bin/bash
+          set -euo pipefail
+
+          # Allow opt-out for CI pipelines that run tests separately.
+          if [[ "${MN_SKIP_PREBUILD:-0}" == "1" ]]; then
+            echo "note: MN_SKIP_PREBUILD=1 — skipping pre-build tests."
+            exit 0
+          fi
+
+          PACKAGE_DIR="${SRCROOT}/SharedFoundation"
+
+          # Run tests with pretty output if xcbeautify is available.
+          if command -v xcbeautify &>/dev/null; then
+            swift test --package-path "$PACKAGE_DIR" 2>&1 | xcbeautify
+          else
+            swift test --package-path "$PACKAGE_DIR"
+          fi
+
+          echo "✅ SharedFoundation tests passed."
+        basedOnDependencyAnalysis: false
+        outputFiles: []
+
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mongrel.notes
+        PRODUCT_NAME: MongrelNotes
+        SWIFT_VERSION: 5.9
+        MACOSX_DEPLOYMENT_TARGET: 14.0
+        ENABLE_HARDENED_RUNTIME: YES
+        CODE_SIGN_ENTITLEMENTS: App/MongrelNotes.entitlements
+        INFOPLIST_FILE: App/Info.plist
+        INFOPLIST_KEY_NSHumanReadableCopyright: "© 2026 Mongrel"
+        INFOPLIST_KEY_CFBundleDisplayName: MongrelNotes
+        MARKETING_VERSION: 1.0.0
+        CURRENT_PROJECT_VERSION: 1
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        # Apple Silicon native
+        EXCLUDED_ARCHS[sdk=macosx*]: ""
+        ARCHS: arm64
+        SWIFT_STRICT_CONCURRENCY: complete
+
+      configs:
+        Debug:
+          DEBUG_INFORMATION_FORMAT: dwarf
+          SWIFT_OPTIMIZATION_LEVEL: "-Onone"
+        Release:
+          DEBUG_INFORMATION_FORMAT: dwarf-with-dsym
+          SWIFT_OPTIMIZATION_LEVEL: "-O"
+          DEAD_CODE_STRIPPING: YES
+          STRIP_INSTALLED_PRODUCT: YES
+
+  MongrelNotesTests:
+    type: bundle.unit-test
+    platform: macOS
+    deploymentTarget: "14.0"
+
+    sources:
+      - path: Tests
+
+    dependencies:
+      - target: MongrelNotes
+      - package: SharedFoundation
+
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mongrel.notes.tests
+        SWIFT_VERSION: 5.9
+
+schemes:
+  MongrelNotes:
+    build:
+      targets:
+        MongrelNotes: all
+    test:
+      config: Debug
+      gatherCoverageData: false
+      targets:
+        - MongrelNotesTests
