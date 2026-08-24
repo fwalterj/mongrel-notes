@@ -1,0 +1,49 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Xcode
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+build/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+*.moved-aside
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xccheckout
+*.xcscmblueprint
+*.xcuserstate
+
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# XcodeGen
+*.xcodeproj
+!project.yml
+
+# Certificates & signing
+*.cer
+*.p12
+*.p8
+*.provisionprofile
+*.mobileprovision
+
+# Logs
+*.log
+
+# Local research and reference checkouts
+LibreTranslate-main/
+SourceCodeSyntaxHighlight-master/
+Sticky-Notes-main/
+awesome-note-taking-master/
+userChrome-glass.css
+
+# Superseded Xcode template retained locally for reference
+MongrelNotes/MongrelNotes/
